@@ -1,0 +1,29 @@
+
+# This file can be run from the terminal as
+# bash reproduce
+
+# Each individual line can also be run from the terminal as written
+# See individual .py and .R files for documentation of arguments
+
+# scrape data from marathonguide.com
+python scrape.py 1 500 men_scraped.py
+python scrape.py 2 500 women_scraped.py
+
+# generate sampled datasets
+Rscript generate_sampled_dataset.R men_scraped.csv men_matches.csv 144 men_sampled.csv
+Rscript generate_sampled_dataset.R women_scraped.csv women_matches.csv 165 women_sampled.csv
+
+# merge sampled data with shoe data
+Rscript merge.R men_sampled.csv men_shoe.csv men_sampled_shoe.csv
+Rscript merge.R women_sampled.csv women_shoe.csv women_sampled_shoe.csv
+
+# generate plot of data
+Rscript explore_data.R
+
+# analyze data with mixed models
+Rscript analysis.R men_sampled_shoe.csv men_fit.RData
+Rscript analysis.R women_sampled_shoe.csv women_fit.RData
+
+# create plot of generalized least squares coefficients
+Rscript explore_fit.RData
+

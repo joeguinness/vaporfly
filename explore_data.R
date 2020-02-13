@@ -4,7 +4,7 @@
 # for each athlete
 data_files <- c("men_sampled_shoe.csv","women_sampled_shoe.csv")
 
-pdf("../paper/data_explore.pdf",width=8,height=3.6)
+pdf("data_explore.pdf",width=8,height=3.6)
 par(family = "serif", mar=c(3.5,4,3,0.5))
 layout(matrix(1:2,1,2),widths = c(0.4,0.6))
 plot( NA, type="n", xlim = c(125,180), ylim = c(125,180),

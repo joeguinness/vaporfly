@@ -3,7 +3,7 @@
 # some diagnostics of the model fit
 fit_files <- c("men_fit.RData","women_fit.RData")
 
-pdf("../paper/vaporfly_coefficients.pdf", width=8,height=3.6)
+pdf("vaporfly_coefficients.pdf", width=8,height=3.6)
 par(mfrow=c(1,2),family="serif", mar=c(3.5,4,3,1), oma = c(0,0,1.0,0))
 titles <- c("Men","Women")
 for(j in 1:2){
