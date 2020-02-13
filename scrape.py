@@ -6,7 +6,7 @@ import pandas as pd
 import sys
 
 # run as
-# $ python scrape01.py gender_int max_place output_filename
+# $ python scrape.py gender_int max_place output_filename
 
 # read geneder_int from command line
 # (gender_int = 0 for both )
