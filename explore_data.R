@@ -39,7 +39,7 @@ for(j in 1:2){
     print(mean(vapor_better,na.rm=TRUE))
     
 }
-legend("topleft",legend=c("Women","Men"), pch = 1, col = cols )
+legend("topleft",legend=c("Women","Men"), pch = 1, col = rev(cols) )
 axis(1,at=c(130,150,170),
     labels = c("2:10","2:30","2:50"), lwd = 0, lwd.ticks = 1 )
 axis(2,at=c(130,150,170),
