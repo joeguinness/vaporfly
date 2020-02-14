@@ -1,13 +1,27 @@
 
 # This file can be run from the terminal as
-# bash reproduce
+# bash reproduce.txt
+
+# Some software is required:
+# python 2.7
+# the following python packages (for scrape.py):
+# requests, bs4, html5lib, pandas
+# install with:
+# pip install requests bs4 html5lib pandas
+
+# R
+# the following R packages
+# lme4
+# in an R session, install with
+# install.packages("lme4")
+ 
 
 # Each individual line can also be run from the terminal as written
 # See individual .py and .R files for documentation of arguments
 
 # scrape data from marathonguide.com
-python scrape.py 1 500 men_scraped.py
-python scrape.py 2 500 women_scraped.py
+python scrape.py 1 500 men_scraped.csv
+python scrape.py 2 500 women_scraped.csv
 
 # generate sampled datasets
 Rscript generate_sampled_dataset.R men_scraped.csv men_matches.csv 144 men_sampled.csv
@@ -20,10 +34,10 @@ Rscript merge.R women_sampled.csv women_shoe.csv women_sampled_shoe.csv
 # generate plot of data
 Rscript explore_data.R
 
-# analyze data with mixed models
+# analyze data with mixed models and print out some results
 Rscript analysis.R men_sampled_shoe.csv men_fit.RData
 Rscript analysis.R women_sampled_shoe.csv women_fit.RData
 
 # create plot of generalized least squares coefficients
-Rscript explore_fit.RData
+Rscript explore_fit.R
 
