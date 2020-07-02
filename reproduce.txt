@@ -23,6 +23,11 @@
 python scrape.py 1 500 men_scraped.csv
 python scrape.py 2 500 women_scraped.csv
 
+# uncomment to scrape data from marathonguide.com with Python 3
+# python scrape_py3.py 1 500 men_scraped.csv
+# python scrape_py3.py 2 500 women_scraped.csv
+
+
 # generate sampled datasets
 Rscript generate_sampled_dataset.R men_scraped.csv men_matches.csv 144 men_sampled.csv
 Rscript generate_sampled_dataset.R women_scraped.csv women_matches.csv 165 women_sampled.csv
