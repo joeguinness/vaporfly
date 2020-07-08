@@ -1,6 +1,6 @@
 
-# args <- commandArgs(trailingOnly = TRUE)
-args <- c("women_sampled_shoe.csv","women_fit.RData")
+args <- commandArgs(trailingOnly = TRUE)
+# args <- c("women_sampled_shoe.csv","women_fit.RData")
 input_perf_csv <- args[1]
 output_rdata <- args[2]
 
