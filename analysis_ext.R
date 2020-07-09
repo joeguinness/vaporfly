@@ -1,11 +1,29 @@
+###
+# Instructions
+# Rscript analysis.R men_sampled_shoe.csv men_fit.RData
+# Rscript analysis.R women_sampled_shoe.csv women_fit.RData
+# or
+# Rscript analysis.R men_sampled_shoe.csv women_sampled_shoe.csv combined_fit.RData
+###
 
 args <- commandArgs(trailingOnly = TRUE)
 # args <- c("women_sampled_shoe.csv","women_fit.RData")
+# args <- c("men_sampled_shoe.csv", "women_sampled_shoe.csv", "combined_fit.RData")
+
 input_perf_csv <- args[1]
-output_rdata <- args[2]
+output_rdata <- args[-1]
 
 # read in the data
-perf_data <- read.csv(input_perf_csv, as.is = TRUE )
+if(length(args) == 2){
+  perf_data <- read.csv(args[1], as.is = TRUE )
+} else
+{
+  male_perf = read.csv(args[1], as.is = TRUE)
+  male_perf$sex = 0
+  female_perf = read.csv(args[2], as.is = TRUE)
+  female_perf$sex = 1
+  perf_data = rbind(male_perf, female_perf)
+}
 
 # convert to a day count
 perf_data$date <- as.Date(perf_data$date)
@@ -50,34 +68,43 @@ ZZ3 <- Z3 %*% t(Z3)
 day_count <- perf_data$day_count[not_missing]
 
 # fit the models
-fit1 <- lme4::lmer( y ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
-fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
-
-print(summary(fit1))
-print(summary(fit2))
-
-vc <- lme4::VarCorr(fit1)
-covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
-vc <- lme4::VarCorr(fit2)
-covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
-
-
-# confidence intervals
-round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 )
-round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 )
-
-# multiplicative effects
-1-exp(fit2@beta[2])
-
-# save the results
-save(fit1, fit2, y, x1, f1, f2, day_count, X, ZZ1, ZZ2, 
-    covparms1, covparms2, file = output_rdata)
-
-
-
-
-
-
-
-
-
+if(length(args) == 2){
+  #only 2 arguments if not combined sex
+  fit1 <- lme4::lmer( y ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
+  fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
+  
+  print(summary(fit1))
+  print(summary(fit2))
+  
+  vc <- lme4::VarCorr(fit1)
+  covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  vc <- lme4::VarCorr(fit2)
+  covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  
+  
+  # confidence intervals
+  round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 )
+  round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 )
+  
+  # multiplicative effects
+  1-exp(fit2@beta[2])
+  
+  # save the results
+  save(fit1, fit2, y, x1, f1, f2, f3, day_count, X, ZZ1, ZZ2, ZZ3,
+       covparms1, covparms2, file = output_rdata)
+}else{
+  f4 <- as.factor(perf_data$sex[not_missing])
+  fit1 <- lme4::lmer( y ~ x1 + (1|f1) + (1|f2) + (1|f3) + x1:f4, REML = TRUE)
+  fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2) + (1|f3) + x1:f4, REML = TRUE )
+  
+  print("Combined Gender Model")
+  print(summary(fit1))
+  print(summary(fit2))
+  
+  
+  round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 )
+  round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 )
+  
+  save(fit1, fit2, y, x1, f1, f2, f3, f4, day_count, X, ZZ1, ZZ2, ZZ3,
+       file = output_rdata)
+}
