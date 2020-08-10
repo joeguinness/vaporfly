@@ -1,11 +1,28 @@
+###
+# Instructions
+# Rscript analysis.R men_sampled_shoe.csv men_fit.RData
+# Rscript analysis.R women_sampled_shoe.csv women_fit.RData
+# or
+# Rscript analysis.R men_sampled_shoe.csv women_sampled_shoe.csv combined_fit.RData
+###
 
 args <- commandArgs(trailingOnly = TRUE)
-#args <- c("women_sampled_shoe.csv","women_fit.RData")
+# args <- c("women_sampled_shoe.csv","women_fit.RData")
+# args <- c("men_sampled_shoe.csv", "women_sampled_shoe.csv", "combined_fit.RData")
+
 input_perf_csv <- args[1]
-output_rdata <- args[2]
+output_rdata <- args[length(args)]
 
 # read in the data
-perf_data <- read.csv(input_perf_csv, as.is = TRUE )
+if(length(args) == 2){
+  perf_data <- read.csv(args[1], as.is = TRUE )
+} else {
+  male_perf = read.csv(args[1], as.is = TRUE)
+  male_perf$sex = 0
+  female_perf = read.csv(args[2], as.is = TRUE)
+  female_perf$sex = 1
+  perf_data = rbind(male_perf, female_perf)
+}
 
 # convert to a day count
 perf_data$date <- as.Date(perf_data$date)
@@ -38,38 +55,87 @@ Z2 <- matrix(0, n, length(lev2) )
 for(j in 1:ncol(Z2)){ Z2[,j] <- as.numeric( f2 == lev2[j] ) }
 ZZ2 <- Z2 %*% t(Z2)
 
+# marathon factor
+f3 <- as.factor(perf_data$marathon[not_missing])
+lev3 <- levels(f3)
+Z3 <- matrix(0, n, length(lev3))
+for(j in 1:ncol(Z3)){ Z3[,j] <- as.numeric( f3 == lev3[j] ) }
+ZZ3 <- Z3 %*% t(Z3)
+
 # days
 day_count <- perf_data$day_count[not_missing]
 
 # fit the models
-fit1 <- lme4::lmer( y ~ x1 + (1|f1) + (1|f2), REML = TRUE )
-fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2), REML = TRUE )
+if(length(args) == 2){ # only 2 arguments if not combined sex
 
-print(summary(fit1))
-print(summary(fit2))
+  fit1 <- lme4::lmer( y ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
+  fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
 
-vc <- lme4::VarCorr(fit1)
-covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
-vc <- lme4::VarCorr(fit2)
-covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  vc <- lme4::VarCorr(fit1)
+  covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  vc <- lme4::VarCorr(fit2)
+  covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  
+  cat("##########################################\n")
+  cat("  Fit to untransformed data\n")
+  cat("##########################################\n")
+  print(summary(fit1))
 
+  cat("\nConfidence interval for vaporfly effect\n")
+  print( round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 ) )
+    
+  cat("\n##########################################\n")
+  cat("  Fit to log transformed data\n")
+  cat("##########################################\n")
+  print(summary(fit2))
+  
+  cat("\nConfidence interval for vaporfly effect\n")
+  print( round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 ) )
+  
+  # multiplicative effects
+  cat("\nmultiplicative effect\n")
+  print( 1-exp(fit2@beta[2]) )
+  
+  # save the results
+  save(fit1, fit2, y, x1, f1, f2, f3, day_count, X, ZZ1, ZZ2, ZZ3,
+       covparms1, covparms2, file = output_rdata)
 
-# confidence intervals
-round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 )
-round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 )
+} else { # fit model with both sexes together
+    
+  f4 <- as.factor(perf_data$sex[not_missing])
+  fit1 <- lme4::lmer( y ~ x1*f4 + (1|f1) + (1|f2) + (1|f3), REML = TRUE)
+  fit2 <- lme4::lmer( log(y) ~ x1*f4 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
+  
+  vc <- lme4::VarCorr(fit1)
+  covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  vc <- lme4::VarCorr(fit2)
+  covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  
+  cat("##########################################\n")
+  cat("  Fit to untransformed data\n")
+  cat("##########################################\n")
+  print(summary(fit1))
 
-# multiplicative effects
-1-exp(fit2@beta[2])
-
-# save the results
-save(fit1, fit2, y, x1, f1, f2, day_count, X, ZZ1, ZZ2, 
-    covparms1, covparms2, file = output_rdata)
-
-
-
-
-
-
-
-
-
+  cat("\nConfidence interval for vaporfly effects\n")
+  print( round( fit1@beta[2] + qnorm(0.95)*sqrt(vcov(fit1)[2,2])*c(-1,1), 3 ) )
+  print( round( fit1@beta[2] + fit1@beta[4] +
+         qnorm(0.95)*sqrt(sum( vcov(fit1)[c(2,4),c(2,4)] ) )*c(-1,1), 3 ) )
+    
+  cat("\n##########################################\n")
+  cat("  Fit to log transformed data\n")
+  cat("##########################################\n")
+  print(summary(fit2))
+  
+  cat("\nConfidence interval for vaporfly effect\n")
+  print( round( fit2@beta[2] + qnorm(0.95)*sqrt(vcov(fit2)[2,2])*c(-1,1), 3 ) )
+  print( round( fit2@beta[2] + fit2@beta[4] +
+         qnorm(0.95)*sqrt(sum( vcov(fit2)[c(2,4),c(2,4)] ) )*c(-1,1), 3 ) )
+  
+  # multiplicative effects
+  cat("\nmultiplicative effect\n")
+  print( 1-exp(fit2@beta[2]) )
+  print( 1-exp(fit2@beta[2]+fit2@beta[4]) )
+  
+  save(fit1, fit2, y, x1, f1, f2, f3, f4, day_count, X, ZZ1, ZZ2, ZZ3,
+       covparms1, covparms2, file = output_rdata)
+}

@@ -42,6 +42,7 @@ Rscript explore_data.R
 # analyze data with mixed models and print out some results
 Rscript analysis.R men_sampled_shoe.csv men_fit.RData
 Rscript analysis.R women_sampled_shoe.csv women_fit.RData
+Rscript analysis.R men_sampled_shoe.csv women_sampled_shoe.csv combined_fit.RData
 
 # create plot of generalized least squares coefficients
 Rscript explore_fit.R
