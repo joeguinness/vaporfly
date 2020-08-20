@@ -48,15 +48,15 @@ Z1 <- matrix(0, n, length(lev1) )
 for(j in 1:ncol(Z1)){ Z1[,j] <- as.numeric( f1 == lev1[j] ) }
 ZZ1 <- Z1 %*% t(Z1)
 
-# race factor and block matrix
-f2 <- as.factor( paste(perf_data$marathon,perf_data$year)[not_missing] )
+# course factor and block matrix
+f2 <- as.factor(perf_data$marathon[not_missing])
 lev2 <- levels(f2)
 Z2 <- matrix(0, n, length(lev2) )
 for(j in 1:ncol(Z2)){ Z2[,j] <- as.numeric( f2 == lev2[j] ) }
 ZZ2 <- Z2 %*% t(Z2)
 
-# marathon factor
-f3 <- as.factor(perf_data$marathon[not_missing])
+# individual race factor
+f3 <- as.factor( paste(perf_data$marathon,perf_data$year)[not_missing] )
 lev3 <- levels(f3)
 Z3 <- matrix(0, n, length(lev3))
 for(j in 1:ncol(Z3)){ Z3[,j] <- as.numeric( f3 == lev3[j] ) }
@@ -72,9 +72,9 @@ if(length(args) == 2){ # only 2 arguments if not combined sex
   fit2 <- lme4::lmer( log(y) ~ x1 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
 
   vc <- lme4::VarCorr(fit1)
-  covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  covparms1 <- c(vc$f1,vc$f2,vc$f3,attr(vc,"sc")^2)
   vc <- lme4::VarCorr(fit2)
-  covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  covparms2 <- c(vc$f1,vc$f2,vc$f3,attr(vc,"sc")^2)
   
   cat("##########################################\n")
   cat("  Fit to untransformed data\n")
@@ -94,6 +94,7 @@ if(length(args) == 2){ # only 2 arguments if not combined sex
   
   # multiplicative effects
   cat("\nmultiplicative effect\n")
+  print( exp(fit2@beta[2]) )
   print( 1-exp(fit2@beta[2]) )
   
   # save the results
@@ -107,9 +108,9 @@ if(length(args) == 2){ # only 2 arguments if not combined sex
   fit2 <- lme4::lmer( log(y) ~ x1*f4 + (1|f1) + (1|f2) + (1|f3), REML = TRUE )
   
   vc <- lme4::VarCorr(fit1)
-  covparms1 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  covparms1 <- c(vc$f1,vc$f2,vc$f3,attr(vc,"sc")^2)
   vc <- lme4::VarCorr(fit2)
-  covparms2 <- c(vc$f1,vc$f2,attr(vc,"sc")^2)
+  covparms2 <- c(vc$f1,vc$f2,vc$f3,attr(vc,"sc")^2)
   
   cat("##########################################\n")
   cat("  Fit to untransformed data\n")
@@ -133,6 +134,8 @@ if(length(args) == 2){ # only 2 arguments if not combined sex
   
   # multiplicative effects
   cat("\nmultiplicative effect\n")
+  print( exp(fit2@beta[2]) )
+  print( exp(fit2@beta[2]+fit2@beta[4]) )
   print( 1-exp(fit2@beta[2]) )
   print( 1-exp(fit2@beta[2]+fit2@beta[4]) )
   

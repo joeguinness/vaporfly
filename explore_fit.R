@@ -15,7 +15,8 @@ for(j in 1:2){
     covmat <- 
         covparms1[1]*ZZ1 + 
         covparms1[2]*ZZ2 +
-        covparms1[3]*diag(n)
+        covparms1[3]*ZZ3 +
+        covparms1[4]*diag(n)
 
     # calculation linear combinations
     lincomb <- solve(covmat, X ) %*% solve( t(X) %*% solve(covmat,X) )[,2]
